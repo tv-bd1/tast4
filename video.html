@@ -1,100 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Ultimate IPTV Player PRO</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Ultimate IPTV Player PRO</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
-<style>
-:root { --bg: #000; --card: #121212; --accent: #00E5FF; --fav: #FFD700; --text: #fff; }
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
-body { background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    <style>
+        :root { --bg: #000; --card: #121212; --accent: #00E5FF; --fav: #FFD700; --text: #fff; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-/* PLAYER AREA */
-.player-wrap { position: relative; width: 100%; background: #000; aspect-ratio: 16/9; flex-shrink: 0; overflow: hidden; }
-video { width: 100%; height: 100%; object-fit: contain; z-index: 5; pointer-events: none; }
+        /* PLAYER AREA */
+        .player-wrap { position: relative; width: 100%; background: #000; aspect-ratio: 16/9; flex-shrink: 0; overflow: hidden; }
+        video { width: 100%; height: 100%; object-fit: contain; z-index: 5; }
 
-/* LOADER */
-#loader { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); z-index: 200; }
-.spinner { width: 40px; height: 40px; border: 4px solid #333; border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* LOADER */
+        #loader { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); z-index: 200; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #333; border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-/* অডিও ভিজ্যুয়ালাইজার */
-#audioAnim { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; gap: 5px; background: #050505; z-index: 4; }
-.v-bar { width: 8px; background: linear-gradient(to top, var(--accent), #fff); border-radius: 50px; animation: jump 0.6s infinite alternate; }
-@keyframes jump { 0% { height: 10%; opacity: 0.3; } 100% { height: 80%; opacity: 1; } }
+        /* CONTROLS */
+        .controls-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); opacity: 0; visibility: hidden; transition: 0.3s; z-index: 100; display: flex; flex-direction: column; justify-content: flex-end; }
+        .controls-overlay.show { opacity: 1; visibility: visible; }
+        .bottom-bar { padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .mini-btns i { font-size: 1.5rem; cursor: pointer; color: #fff; }
 
-/* HUD FOR SWIPE */
-#hud { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; z-index: 1000; display: none; text-align: center; pointer-events: none; background: rgba(0,0,0,0.5); padding: 20px; border-radius: 15px; }
-#hud i { display: block; font-size: 3rem; margin-bottom: 5px; }
-
-/* CONTROLS */
-.controls-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); opacity: 0; visibility: hidden; transition: 0.3s; z-index: 100; display: flex; flex-direction: column; justify-content: flex-end; }
-.controls-overlay.show { opacity: 1; visibility: visible; }
-.bottom-bar { padding: 15px; background: linear-gradient(transparent, rgba(0,0,0,0.9)); display: flex; justify-content: space-between; align-items: center; }
-.mini-btns, .right-side { display: flex; align-items: center; gap: 20px; }
-.mini-btns i, .right-side i { font-size: 1.5rem; cursor: pointer; color: #fff; }
-
-/* রোটেট কন্ডিশনাল বাটন */
-#qualityBtn, #scaleBtn { display: none; }
-@media screen and (orientation: landscape) { #qualityBtn, #scaleBtn { display: inline-block; } }
-
-/* POP-UP MENU */
-.pop-menu { position: absolute; bottom: 70px; background: rgba(15, 15, 15, 0.98); border: 1px solid #333; border-radius: 12px; display: none; flex-direction: column; z-index: 150; min-width: 150px; overflow: hidden; }
-.pop-menu button { background: none; border: none; color: white; padding: 12px; cursor: pointer; border-bottom: 1px solid #222; text-align: left; }
-.pop-menu button:hover { background: var(--accent); color: #000; }
-
-/* INFO AREA */
-.info { padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; background: #0a0a0a; border-bottom: 1px solid #1a1a1a; }
-.mini-logo { width: 45px; height: 45px; border-radius: 8px; object-fit: cover; border: 1px solid #333; }
-
-/* TAB ACTIONS */
-.actions { display: flex; padding: 10px 0; background: #000; border-bottom: 1px solid #1a1a1a; }
-.actions div { flex: 1; text-align: center; font-size: 0.9rem; color: #888; cursor: pointer; }
-.actions div.active-tab { color: var(--accent); font-weight: bold; border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
-
-/* CHANNEL LIST - BALANCED PADDING FOR MOBILE NAV BAR */
-.list { 
-    flex: 1; 
-    overflow-y: auto; 
-    padding: 10px; 
-    padding-bottom: 70px; /* ভারসাম্য বজায় রাখতে ৭০ পিক্সেল দেওয়া হলো */
-    padding-bottom: calc(70px + env(safe-area-inset-bottom));
-    background: #000; 
-    scroll-behavior: smooth;
-}
-
-.row { display: flex; align-items: center; gap: 12px; background: var(--card); padding: 10px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #1a1a1a; cursor: pointer; }
-.row.active { border-color: var(--accent); background: rgba(0, 229, 255, 0.05); }
-.list-logo { width: 50px; height: 50px; border-radius: 6px; object-fit: cover; }
-.name { flex: 1; font-size: 0.95rem; color: #fff; font-weight: 500; }
-.star-btn { font-size: 1.2rem; color: #333; }
-.star-btn.is-fav { color: var(--fav); }
-</style>
+        /* INFO & LIST */
+        .info { padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; background: #0a0a0a; border-bottom: 1px solid #1a1a1a; }
+        .mini-logo { width: 45px; height: 45px; border-radius: 8px; object-fit: cover; }
+        .list { flex: 1; overflow-y: auto; padding: 10px; background: #000; }
+        .row { display: flex; align-items: center; gap: 12px; background: var(--card); padding: 10px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #1a1a1a; cursor: pointer; }
+        .row.active { border-color: var(--accent); background: rgba(0, 229, 255, 0.1); }
+        .list-logo { width: 50px; height: 50px; border-radius: 6px; object-fit: cover; }
+        .name { flex: 1; font-size: 0.95rem; color: #fff; }
+    </style>
 </head>
 <body>
 
 <div class="player-wrap" id="playerArea" onclick="handlePlayerClick()">
     <div id="loader"><div class="spinner"></div></div>
-    <div id="audioAnim"></div>
-    <div id="hud"><i id="hudIcon"></i><span id="hudValue"></span></div>
-    
     <video id="video" playsinline crossorigin="anonymous"></video>
-    <div class="pop-menu" id="popMenu"></div>
     
     <div class="controls-overlay" id="controls">
         <div class="bottom-bar">
             <div class="mini-btns">
                 <i class="fas fa-play" id="pp" onclick="togglePlay(event)"></i>
-                <i class="fas fa-redo" onclick="location.reload()"></i>
+                <i class="fas fa-redo" style="margin-left: 20px;" onclick="location.reload()"></i>
             </div>
-            <div class="right-side">
-                <i class="fas fa-cog" id="qualityBtn" onclick="showQualityMenu(event)"></i>
-                <i class="fas fa-sliders-h" id="scaleBtn" onclick="showScalingMenu(event)"></i>
-                <i class="fas fa-expand" onclick="toggleFull(event)"></i>
-            </div>
+            <i class="fas fa-expand" onclick="toggleFull(event)"></i>
         </div>
     </div>
 </div>
@@ -102,177 +57,132 @@ video { width: 100%; height: 100%; object-fit: contain; z-index: 5; pointer-even
 <div class="info">
     <div style="display:flex; align-items:center; gap:12px;">
         <img id="currentLogo" class="mini-logo" src="https://i.imgur.com/8Qf6Y0L.png">
-        <div><h3 id="title" style="font-size:1rem;">Select Channel</h3><small style="color:var(--accent);">LIVE STREAM</small></div>
+        <div><h3 id="title" style="font-size:1rem;">চ্যানেল লোড হচ্ছে...</h3><small style="color:var(--accent);">LIVE STREAM</small></div>
     </div>
     <div id="count" style="font-size:0.85rem; opacity:0.8;">0 CH</div>
-</div>
-
-<div class="actions">
-    <div id="allBtnTab" class="active-tab" onclick="switchTab('all', this)"><i class="fas fa-list"></i> All List</div>
-    <div id="favBtnTab" onclick="switchTab('fav', this)"><i class="fas fa-star"></i> My List</div>
-    <div onclick="window.open('https://t.me/bestiptvlive')"><i class="fab fa-telegram-plane"></i> Telegram</div>
 </div>
 
 <div class="list" id="list"></div>
 
 <script>
-const video=document.getElementById('video'), playerArea=document.getElementById('playerArea'), popMenu=document.getElementById('popMenu'), controls=document.getElementById('controls'), listArea=document.getElementById('list'), audioAnim=document.getElementById('audioAnim'), loader=document.getElementById('loader');
-let hls=new Hls(), allChannels=[], isFavView=false, hideTimeout, brightness=1;
+    const video = document.getElementById('video');
+    const listArea = document.getElementById('list');
+    const loader = document.getElementById('loader');
+    const controls = document.getElementById('controls');
+    let hls = new Hls();
+    let allChannels = [];
 
-for(let i=0; i<20; i++) {
-    let bar = document.createElement('div');
-    bar.className = 'v-bar';
-    bar.style.animationDelay = (Math.random()*0.8)+'s';
-    audioAnim.appendChild(bar);
-}
-
-function handlePlayerClick() {
-    const isShowing = controls.classList.toggle('show');
-    if (!isShowing) popMenu.style.display = 'none';
-    clearTimeout(hideTimeout);
-    if(isShowing) hideTimeout = setTimeout(() => {
-        controls.classList.remove('show');
-        popMenu.style.display = 'none';
-    }, 5000);
-}
-
-video.onwaiting = () => loader.style.display = 'flex';
-video.onplaying = () => {
-    loader.style.display = 'none';
-    if (video.videoHeight === 0 && !video.paused) { audioAnim.style.display = 'flex'; } else { audioAnim.style.display = 'none'; }
-};
-
-function play(url, name, logo) {
-    loader.style.display = 'flex';
-    audioAnim.style.display = 'none';
-    document.getElementById('title').innerText = name;
-    document.getElementById('currentLogo').src = logo || "https://i.imgur.com/8Qf6Y0L.png";
-    if(url.includes('.m3u8')){
-        hls.destroy(); hls = new Hls();
-        hls.loadSource(url); hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
-    } else { hls.destroy(); video.src = url; video.play(); }
-    document.getElementById('pp').className = "fas fa-pause";
-    render();
-}
-
-function render() {
-    let arr = isFavView ? JSON.parse(localStorage.getItem('my_iptv_favs') || "[]") : allChannels;
-    listArea.innerHTML = "";
-    document.getElementById('count').innerText = arr.length + " CH";
-    arr.forEach(ch => {
-        const favs = JSON.parse(localStorage.getItem('my_iptv_favs') || "[]");
-        const isFav = favs.some(f => f.url === ch.url);
-        const isActive = (video.src === ch.url || hls.url === ch.url);
-        const d = document.createElement('div');
-        d.className = `row ${isActive ? 'active' : ''}`;
-        d.innerHTML = `<img src="${ch.logo}" class="list-logo" onerror="this.src='https://i.imgur.com/8Qf6Y0L.png'"><div class="name">${ch.name}</div><i class="fas fa-star star-btn ${isFav ? 'is-fav' : ''}" onclick="toggleFav(event, ${JSON.stringify(ch).replace(/"/g, '&quot;')})"></i>`;
-        d.onclick = () => play(ch.url, ch.name, ch.logo);
-        listArea.appendChild(d);
-    });
-}
-
-function showScalingMenu(e) {
-    e.stopPropagation();
-    popMenu.style.right = "15px"; popMenu.style.left = "auto";
-    popMenu.innerHTML = `<button onclick="setScaling('contain')">Fit Screen</button><button onclick="setScaling('fill')">Zoom Fill</button><button onclick="setScaling('cover')">Stretch 16:9</button>`;
-    popMenu.style.display = (popMenu.innerHTML && popMenu.style.display !== 'flex') ? 'flex' : 'none';
-}
-
-function showQualityMenu(e) {
-    e.stopPropagation();
-    popMenu.style.right = "60px"; popMenu.style.left = "auto";
-    let html = `<button onclick="setQuality(-1)">Auto Quality</button>`;
-    if(hls.levels) hls.levels.forEach((l, i) => html += `<button onclick="setQuality(${i})">${l.height || i}p Quality</button>`);
-    popMenu.innerHTML = html;
-    popMenu.style.display = (popMenu.style.display !== 'flex') ? 'flex' : 'none';
-}
-
-function setScaling(t) { video.style.objectFit = t; popMenu.style.display = 'none'; }
-function setQuality(i) { hls.currentLevel = i; popMenu.style.display = 'none'; }
-
-async function toggleFull(e) {
-    if(e) e.stopPropagation();
-    if (!document.fullscreenElement) {
-        await playerArea.requestFullscreen();
-        video.style.objectFit = 'fill';
-        if (screen.orientation?.lock) screen.orientation.lock('landscape').catch(()=>{});
-    } else { document.exitFullscreen(); video.style.objectFit = 'contain'; }
-}
-
-function togglePlay(e) { 
-    if(e) e.stopPropagation(); 
-    if (video.paused) {
-        video.play();
-        document.getElementById('pp').className="fas fa-pause";
-        if (video.videoHeight === 0) audioAnim.style.display = 'flex';
-    } else {
-        video.pause();
-        document.getElementById('pp').className="fas fa-play";
-        audioAnim.style.display = 'none';
+    // প্লেয়ার ক্লিক হ্যান্ডলার
+    function handlePlayerClick() {
+        controls.classList.toggle('show');
     }
-}
 
-function switchTab(type, el) {
-    document.querySelectorAll('.actions div').forEach(d => d.classList.remove('active-tab'));
-    el.classList.add('active-tab');
-    isFavView = (type === 'fav');
-    render();
-}
+    // ভিডিও প্লে করার ফাংশন
+    function play(url, name, logo) {
+        loader.style.display = 'flex';
+        document.getElementById('title').innerText = name;
+        document.getElementById('currentLogo').src = logo || "https://i.imgur.com/8Qf6Y0L.png";
 
-function toggleFav(e, ch) {
-    e.stopPropagation();
-    let favs = JSON.parse(localStorage.getItem('my_iptv_favs') || "[]");
-    const index = favs.findIndex(f => f.url === ch.url);
-    if (index > -1) favs.splice(index, 1); else favs.push(ch);
-    localStorage.setItem('my_iptv_favs', JSON.stringify(favs));
-    render();
-}
-
-// SWIPE CONTROLS
-let startY, startVal, isLeft;
-playerArea.addEventListener('touchstart', e => {
-    if (!document.fullscreenElement) return;
-    startY = e.touches[0].clientY;
-    isLeft = e.touches[0].clientX < playerArea.clientWidth / 2;
-    startVal = isLeft ? brightness : video.volume;
-});
-playerArea.addEventListener('touchmove', e => {
-    if (!document.fullscreenElement) return;
-    e.preventDefault();
-    let delta = (startY - e.touches[0].clientY) / 150;
-    const hud = document.getElementById('hud'), icon = document.getElementById('hudIcon'), val = document.getElementById('hudValue');
-    hud.style.display = 'block';
-    if(isLeft) {
-        brightness = Math.min(Math.max(startVal + delta, 0.3), 1.8);
-        playerArea.style.filter = `brightness(${brightness})`;
-        icon.className = 'fas fa-sun'; val.innerText = Math.round(brightness * 50) + "%";
-    } else {
-        let v = Math.min(Math.max(startVal + delta, 0), 1);
-        video.volume = v;
-        icon.className = v === 0 ? 'fas fa-volume-mute' : 'fas fa-volume-up'; val.innerText = Math.round(v * 100) + "%";
+        if (Hls.isSupported()) {
+            hls.destroy();
+            hls = new Hls();
+            hls.loadSource(url);
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                video.play();
+                loader.style.display = 'none';
+            });
+            // এরর হ্যান্ডলিং
+            hls.on(Hls.Events.ERROR, function (event, data) {
+                if (data.fatal) {
+                    console.error("HLS Fatal Error:", data.type);
+                    loader.style.display = 'none';
+                }
+            });
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = url;
+            video.play();
+        }
+        document.getElementById('pp').className = "fas fa-pause";
+        renderList(url);
     }
-});
-playerArea.addEventListener('touchend', () => setTimeout(()=> document.getElementById('hud').style.display='none', 800));
 
-const playlistUrl = new URLSearchParams(location.search).get('playlist');
-if(playlistUrl) {
-    fetch(playlistUrl).then(r=>r.text()).then(data => {
-        let lines=data.split('\n'), c={};
-        lines.forEach(l => {
-            if(l.startsWith('#EXTINF')){
-                c.name = l.split(',')[1]?.trim();
-                c.logo = l.match(/tvg-logo="([^"]*)"/)?.[1];
-            } else if(l.startsWith('http')) {
-                c.url = l.trim(); allChannels.push({...c}); c={};
-            }
+    // চ্যানেল লিস্ট রেন্ডার করা
+    function renderList(activeUrl) {
+        listArea.innerHTML = "";
+        document.getElementById('count').innerText = allChannels.length + " CH";
+        allChannels.forEach(ch => {
+            const isActive = (activeUrl === ch.url);
+            const d = document.createElement('div');
+            d.className = `row ${isActive ? 'active' : ''}`;
+            d.innerHTML = `<img src="${ch.logo}" class="list-logo" onerror="this.src='https://i.imgur.com/8Qf6Y0L.png'"><div class="name">${ch.name}</div>`;
+            d.onclick = () => play(ch.url, ch.name, ch.logo);
+            listArea.appendChild(d);
         });
-        render();
-        if(allChannels[0]) play(allChannels[0].url, allChannels[0].name, allChannels[0].logo);
-    });
-}
+    }
+
+    // প্লে/পজ বাটন
+    function togglePlay(e) {
+        e.stopPropagation();
+        if (video.paused) {
+            video.play();
+            document.getElementById('pp').className = "fas fa-pause";
+        } else {
+            video.pause();
+            document.getElementById('pp').className = "fas fa-play";
+        }
+    }
+
+    // ফুল স্ক্রিন
+    function toggleFull(e) {
+        e.stopPropagation();
+        if (!document.fullscreenElement) {
+            document.getElementById('playerArea').requestFullscreen();
+        } else {
+            document.exitFullscreen();
+        }
+    }
+
+    // প্লেলিস্ট লোড করা (URL ?playlist= লিংকের মাধ্যমে)
+    const playlistUrl = new URLSearchParams(location.search).get('playlist');
+
+    if (playlistUrl) {
+        fetch(playlistUrl)
+            .then(res => res.text())
+            .then(data => {
+                const lines = data.split('\n');
+                let currentChannel = {};
+                allChannels = [];
+
+                lines.forEach(line => {
+                    line = line.trim();
+                    if (line.startsWith('#EXTINF')) {
+                        const nameMatch = line.split(',')[1];
+                        const logoMatch = line.match(/tvg-logo="([^"]*)"/);
+                        currentChannel.name = nameMatch ? nameMatch.trim() : "Unknown Channel";
+                        currentChannel.logo = logoMatch ? logoMatch[1] : "";
+                    } else if (line.startsWith('http')) {
+                        currentChannel.url = line;
+                        allChannels.push({ ...currentChannel });
+                        currentChannel = {};
+                    }
+                });
+
+                if (allChannels.length > 0) {
+                    renderList();
+                    play(allChannels[0].url, allChannels[0].name, allChannels[0].logo);
+                } else {
+                    document.getElementById('title').innerText = "কোনো চ্যানেল পাওয়া যায়নি";
+                }
+            })
+            .catch(err => {
+                console.error("প্লেলিস্ট লোড করতে সমস্যা:", err);
+                document.getElementById('title').innerText = "প্লেলিস্ট লোড ব্যর্থ হয়েছে";
+            });
+    } else {
+        document.getElementById('title').innerText = "লিংকে প্লেলিস্ট অ্যাড করুন";
+    }
 </script>
 
-    <script src="https://pl26377172.effectivegatecpm.com/d7/8b/93/d78b9343b29d8ff89244b094b359e591.js"></script>
 </body>
 </html>
